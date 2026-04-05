@@ -1,5 +1,5 @@
- gittokenparallel
-*.txt
+cmake-build-*/
+.cmake/
 .idea/
 results/
-
+.venv/
