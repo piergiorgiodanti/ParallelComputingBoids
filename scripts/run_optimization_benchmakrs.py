@@ -27,9 +27,6 @@ def run_baseline():
         print("    Controlla il tuo CMakeLists.txt per il target con flag -O0.")
         sys.exit(1)
 
-    if os.path.exists(OUT_CSV):
-        os.remove(OUT_CSV)
-
     env = os.environ.copy()
     env["OMP_SCHEDULE"] = OMP_SCHEDULE
 

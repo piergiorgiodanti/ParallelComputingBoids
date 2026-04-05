@@ -26,8 +26,6 @@ def main():
     print("="*68)
 
     os.makedirs(os.path.dirname(OUT_CSV), exist_ok=True)
-    if os.path.exists(OUT_CSV):
-        os.remove(OUT_CSV)
 
     for target in TARGETS:
         target_path = os.path.join(BUILD_DIR, target)

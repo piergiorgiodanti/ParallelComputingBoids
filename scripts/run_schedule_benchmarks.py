@@ -35,9 +35,6 @@ def run_scheduling_benchmarks():
         print(f">>> [ERRORE] Binario {TARGET_NAME} non trovato in {BUILD_DIR}!")
         sys.exit(1)
 
-    if os.path.exists(OUT_CSV):
-        os.remove(OUT_CSV)
-
     print("--- Testando clausole OMP_SCHEDULE ---")
     
     for s in SCHEDULES:

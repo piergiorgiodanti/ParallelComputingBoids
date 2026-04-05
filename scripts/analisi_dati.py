@@ -7,6 +7,7 @@ try:
     df = pd.read_csv('../results/dumps/all_implementations_benchmarks.csv')
     df_sched_raw = pd.read_csv('../results/dumps/scheduling_comparison.csv')
     df_o0 = pd.read_csv('../results/dumps/baseline_results.csv')
+    df_weak = pd.read_csv('../results/dumps/weak_scaling_benchmarks.csv')
     print("File CSV caricati con successo.")
 except Exception as e:
     print(f"Errore caricamento: {e}")
@@ -15,9 +16,9 @@ except Exception as e:
 if not os.path.exists('../results/plots'):
     os.makedirs('../results/plots')
 
-# Creazione della colonna Impl per entrambi i dataframe
 df['Impl'] = df['Layout'] + " " + df['Sync']
 df_sched_raw['Impl'] = df_sched_raw['Layout'] + " " + df_sched_raw['Sync']
+df_weak['Impl'] = df_weak['Layout'] + " " + df_weak['Sync']
 
 df = df.drop_duplicates(subset=['Impl', 'Schedule', 'Boids', 'Threads'])
 
@@ -26,7 +27,6 @@ COLORS = {'AoS Atomic': '#e74c3c', 'AoS Histo': '#c0392b', 'SoA Atomic': '#3498d
 BOIDS_TARGET = 20000
 df_base = df[df['Schedule'] == 'dynamic-64']
 
-# Grafico 1: Confronto Layout di Memoria e Sincronizzazione
 plt.figure(figsize=(10, 6))
 df_comp = df_base[(df_base['Boids'] == BOIDS_TARGET) & (df_base['Threads'] == 8)].copy()
 df_comp = df_comp[df_comp['Impl'].isin(PARALLEL_IMPLS)]
@@ -40,7 +40,6 @@ plt.tight_layout()
 plt.savefig('../results/plots/1_arch_comparison.png')
 plt.close()
 
-# Grafico 2: Strong Scaling (tempo vs threads)
 plt.figure(figsize=(10, 6))
 df_20k = df_base[df_base['Boids'] == BOIDS_TARGET]
 threads_list = [1, 2, 4, 8, 16]
@@ -63,7 +62,6 @@ plt.tight_layout()
 plt.savefig('../results/plots/2_strong_scaling.png')
 plt.close()
 
-# Grafico 3: Speedup ed Efficienza
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
 
 for impl in PARALLEL_IMPLS:
@@ -92,7 +90,6 @@ plt.tight_layout()
 plt.savefig('../results/plots/3_speedup_efficiency.png')
 plt.close()
 
-# Grafico 4: CPU time vs wall time
 plt.figure(figsize=(10, 6))
 soa_h_data = df_20k[df_20k['Impl'] == 'SoA Histo'].sort_values('Threads')
 
@@ -113,7 +110,6 @@ plt.tight_layout()
 plt.savefig('../results/plots/4_cpu_vs_wall_time.png')
 plt.close()
 
-# Grafico 5: Tempo vs Numero di Boids
 plt.figure(figsize=(10, 6))
 df_8t = df_base[df_base['Threads'] == 8]
 boids_list = [1000, 5000, 10000, 20000]
@@ -132,7 +128,6 @@ plt.tight_layout()
 plt.savefig('../results/plots/5_time_vs_boids.png')
 plt.close()
 
-# Grafico 6: Scheduling
 schedules = ['static', 'dynamic-16', 'dynamic-32', 'dynamic-64', 'dynamic-128', 'guided']
 df_sched = df_sched_raw[(df_sched_raw['Boids'] == BOIDS_TARGET) & (df_sched_raw['Threads'] == 8) & (df_sched_raw['Impl'] == 'SoA Histo')].copy()
 df_sched = df_sched[df_sched['Schedule'].isin(schedules)]
@@ -158,7 +153,6 @@ plt.tight_layout()
 plt.savefig('../results/plots/6_scheduling_impact.png')
 plt.close()
 
-# Grafico 7: Ottimizzazioni Compilatore
 t_o3_row = df_20k[(df_20k['Impl'] == 'SoA Histo') & (df_20k['Threads'] == 8)].iloc[0]
 t_o3 = t_o3_row['WallTime_Avg']
 t_o3_std = t_o3_row['WallTime_StdDev']
@@ -167,17 +161,30 @@ t_o0 = df_o0['WallTime_Avg'].values[0]
 t_o0_std = df_o0['WallTime_StdDev'].values[0]
 
 plt.figure(figsize=(8, 6))
-bars = plt.bar(['-O0 (Baseline)', '-O3 (Turbo + LTO)'], [t_o0, t_o3], yerr=[t_o0_std, t_o3_std],
-               capsize=5, color=['#7f8c8d', '#f1c40f'], edgecolor='black', alpha=0.8)
+plt.bar(['-O0 (Baseline)', '-O3 (Turbo + LTO)'], [t_o0, t_o3], yerr=[t_o0_std, t_o3_std],
+        capsize=5, color=['#7f8c8d', '#f1c40f'], edgecolor='black', alpha=0.8)
 plt.ylabel('Wall Time (s)')
 plt.title('Impatto Ottimizzazioni Compilatore (SoA Histo, 20k Boids, 8T)')
 plt.grid(axis='y', alpha=0.4)
-
-for bar in bars:
-    yval = bar.get_height()
-
 plt.tight_layout()
 plt.savefig('../results/plots/7_compiler_impact.png')
 plt.close()
 
-print("Generati grafici nella cartella '../results/ plots/'.")
+plt.figure(figsize=(10, 6))
+
+threads = df_weak['Threads']
+time = df_weak['WallTime_Avg']
+std = df_weak['WallTime_StdDev']
+
+plt.errorbar(threads, time, yerr=std, marker='o', linewidth=2, capsize=4)
+
+plt.xlabel('Numero di Thread')
+plt.ylabel('Wall Time (s)')
+plt.title('Weak Scaling (SoA Histo)')
+plt.xticks(threads)
+plt.grid(True, alpha=0.4)
+plt.tight_layout()
+plt.savefig('../results/plots/8_weak_scaling.png')
+plt.close()
+
+print("Generati grafici nella cartella '../results/plots/'.")
