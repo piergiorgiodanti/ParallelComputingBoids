@@ -71,6 +71,7 @@ Gli script per raccogliere i dati per le analisi si trovano nella cartella `scri
 * **Benchmark Completo:** Esegue tutti i target per diversi numeri di boids e thread.
     ```bash
     uv run python run_all_implementations_benchmarks.py
+    uv run python weak_scaling_benchmarks.py
     ```
 * **Analisi Scheduling:** Valuta lo scheduling con `static`, `dynamic` e `guided`.
     ```bash
