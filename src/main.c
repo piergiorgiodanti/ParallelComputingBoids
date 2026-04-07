@@ -32,21 +32,6 @@ Stats compute_stats(double* times, int n) {
     return (Stats){mean, sqrt(sum_sq / n)};
 }
 
-void print_info() {
-    printf("============================================\n");
-    #ifdef _OPENMP
-        printf(" ENGINE: PARALLELO (OpenMP %d threads max)\n", omp_get_max_threads());
-    #else
-        printf(" ENGINE: SEQUENZIALE\n");
-    #endif
-    #ifdef USE_SOA
-        printf(" LAYOUT: SoA (Structure of Arrays)\n");
-    #else
-        printf(" LAYOUT: AoS (Array of Structures)\n");
-    #endif
-    printf("============================================\n\n");
-}
-
 void parse_args(int argc, char* argv[], Config* cfg) {
     strcpy(cfg->mode, "");
     cfg->boids = -1;
@@ -159,8 +144,6 @@ int main(int argc, char* argv[]) {
     #ifdef _OPENMP
     omp_set_num_threads(cfg.threads);
     #endif
-
-    print_info();
 
     if (strcmp(cfg.mode, "benchmark") == 0) run_benchmark(&cfg);
     else if (strcmp(cfg.mode, "validate") == 0) run_validate(&cfg);

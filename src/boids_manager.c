@@ -11,9 +11,11 @@
 #endif
 
 void init_boids(const BoidSystem* boids, const int num_boids) {
-    // Si assegnano valori iniziali randomici ai boids
-    // Questa parte poteva essere parallela, ma non rientrando nella parte
-    // da misurare nelle prestazioni è rimasta sequenziale
+
+    /* Si assegnano valori iniziali randomici ai boids.
+       Questa parte poteva essere parallela, ma non rientrando nella parte
+       da misurare nelle prestazioni è rimasta sequenziale */
+
     unsigned int master_seed = 42;
     for (int i = 0; i < num_boids; i++) {
         const float start_x = MARGIN_X + (rand_r(&master_seed) % (SCREEN_WIDTH - 2 * MARGIN_X));
@@ -32,8 +34,7 @@ void init_boids(const BoidSystem* boids, const int num_boids) {
 void init_boids_system(BoidSystem *b, int num_boids) {
     b->count = num_boids;
 
-    // Dimensione della linea di cache
-    // Allineare la memoria per massimizzare l'efficienza
+    // Dimensione della linea di cache. Allineare la memoria per massimizzare l'efficienza
     long alignment = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
     if (alignment <= 0) {
         alignment = 64;

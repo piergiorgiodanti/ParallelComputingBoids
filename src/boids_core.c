@@ -121,11 +121,13 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
 
     #pragma omp parallel
     {
+        // Reset
         #pragma omp for
         for (int c = 0; c < total_cells; c++) {
             ctx->counting_cell[c] = 0;
         }
 
+        // Conteggio boids per ogni cella
         #pragma omp for
         for (int i = 0; i < num_boids; i++) {
             int cell = get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows);
@@ -133,6 +135,7 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
             ctx->counting_cell[cell]++;
         }
 
+        // Calcolo degli offset
         #pragma omp single
         {
             ctx->cell_offsets[0] = 0;
@@ -144,6 +147,7 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
             memcpy(ctx->temp_offsets, ctx->cell_offsets, total_cells * sizeof(int));
         }
 
+        // Ordinamento degli indici
         #pragma omp for
         for (int i = 0; i < num_boids; i++) {
             int cell = get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows);
@@ -165,13 +169,19 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
         // Reset locale
         memset(my_hist, 0, total_cells * sizeof(int));
 
-        // Conteggio locale
+        /* I thread si dividono i boids e costruiscono un istogramma locale:
+           my_hist[c] contiene quanti boids di questo thread appartengono
+           alla cella c. */
+
         #pragma omp for
         for (int i = 0; i < num_boids; i++) {
             my_hist[get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows)]++;
         }
 
-        // Riduzione globale (Somma degli istogrammi)
+        /*  Riduzione: i thread si dividono il numero di celle, e per ogni cella contano
+            quanti boids hanno contato gli altri threads per quella cella, e scrivono
+            il totale in counting_cell */
+
         #pragma omp for
         for (int c = 0; c < total_cells; c++) {
             int sum = 0;
@@ -179,7 +189,7 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
             ctx->counting_cell[c] = sum;
         }
 
-        // Prefissi globali (Punto di inizio di ogni cella), non parallelizzabile per la dipendenza da i-1
+        // Calcolo degli offset, non parallelizzato
         #pragma omp single
         {
             ctx->cell_offsets[0] = 0;
@@ -187,15 +197,25 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
                 ctx->cell_offsets[i+1] = ctx->cell_offsets[i] + ctx->counting_cell[i];
         }
 
-        // Calcolo posizioni di scrittura private per thread
-        // per evitare collisioni in sorted_ind
+        /*  Ogni thread calcola l'offset da cui iniziare a scrivere per ogni cella.
+            L'offset è dato da:
+
+            cell_offsets[c] +
+            numero di boids della cella c contati dai thread precedenti.
+
+            In questo modo ogni thread ottiene una porzione distinta dell'intervallo
+            della cella dentro sorted_ind e può scrivere senza collisioni con gli altri. */
+
         for (int c = 0; c < total_cells; c++) {
             int thread_offset = 0;
             for (int t = 0; t < tid; t++) thread_offset += ctx->local_histograms[t][c];
             my_offs[c] = ctx->cell_offsets[c] + thread_offset;
         }
 
-        // Aggiornamento sorted_ind
+        /*  Orindamento indici dei boids. Ogni thread utilizza la propria copia privata
+            di offset, per non dover modificare una risorsa condivisa.
+            Ogni thread lavora sul proprio offset */
+
         #pragma omp for
         for (int i = 0; i < num_boids; i++) {
             const int cell = get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows);
@@ -206,13 +226,16 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
     #else
         // SEQUENZIALE
         memset(ctx->counting_cell, 0, total_cells * sizeof(int));
+        // Conteggio boids per ogni cella
         for (int i = 0; i < num_boids; i++) ctx->counting_cell[get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows)]++;
 
+        // Calcolo degli offset
         ctx->cell_offsets[0] = 0;
         for (int i = 0; i < total_cells; i++) ctx->cell_offsets[i+1] = ctx->cell_offsets[i] + ctx->counting_cell[i];
 
         memcpy(ctx->temp_offsets, ctx->cell_offsets, total_cells * sizeof(int));
 
+        // Ordinamento degli indici
         for (int i = 0; i < num_boids; i++) {
             ctx->sorted_ind[ctx->temp_offsets[get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows)]++] = i;
         }

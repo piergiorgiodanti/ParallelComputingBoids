@@ -52,7 +52,6 @@ void set_window(const int num_boids) {
 
 SimulationResult boids_simulation(const int num_boids, const int frames, bool show_graphics, bool return_data) {
     // Double Buffering per evitare conflitti di lettura/scrittura durante l'aggiornamento dei Boids
-    // e struttura aggiuntiva per mantenere i boids ordinati per cella
     BoidSystem struct_old_boids, struct_new_boids;
 
     init_boids_system(&struct_old_boids, num_boids);
@@ -81,8 +80,8 @@ SimulationResult boids_simulation(const int num_boids, const int frames, bool sh
         const float dt = show_graphics ? GetFrameTime() : 0.016f;
 
         update_indices(old_boids, num_boids, &sim);
-        // Per ridurre l'overhead di ordinamento, lo facciamo solo ogni SORTING_FREQUENCY frame.
-        // Questo è un compromesso tra avere boids più vicini in memoria e il costo di ordinamento.
+        // Per ridurre l'overhead di ordinamento, si ordina ogni SORTING_FREQUENCY frame.
+        // Compromesso tra avere boids più vicini in memoria e il costo di ordinamento.
         if (frame % SORTING_FREQUENCY == 0) {
             sort_boids_by_cell(old_boids, num_boids, sim.sorted_ind, new_boids);
             BoidSystem *temp = old_boids;

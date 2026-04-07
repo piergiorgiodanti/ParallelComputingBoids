@@ -176,11 +176,14 @@ threads = df_weak['Threads']
 time = df_weak['WallTime_Avg']
 std = df_weak['WallTime_StdDev']
 
-plt.errorbar(threads, time, yerr=std, marker='o', linewidth=2, capsize=4)
+plt.errorbar(threads, time, yerr=std, marker='o', linewidth=2, capsize=4, label='Tempo Misurato')
 
 plt.xlabel('Numero di Thread')
 plt.ylabel('Wall Time (s)')
 plt.title('Weak Scaling (SoA Histo)')
+t_weak_1 = df_weak[df_weak['Threads'] == 1]['WallTime_Avg'].values[0]
+plt.axhline(y=t_weak_1, color='k', linestyle='--', label='Scalabilità Ideale (Tempo Costante)')
+plt.legend()
 plt.xticks(threads)
 plt.grid(True, alpha=0.4)
 plt.tight_layout()
