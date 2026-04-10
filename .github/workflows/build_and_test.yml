@@ -49,9 +49,17 @@ jobs:
         enable-cache: true
 
     # 5. Configurazione CMake
-    - name: Configure CMake (Linux / macOS)
-      if: runner.os != 'Windows'
+    - name: Configure CMake (Linux)
+      if: runner.os == 'Linux'
       run: cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release
+
+    - name: Configure CMake (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release \
+          -DOpenMP_C_FLAGS="-Xpreprocessor -fopenmp -I$(brew --prefix libomp)/include" \
+          -DOpenMP_C_LIB_NAMES="omp" \
+          -DOpenMP_omp_LIBRARY="$(brew --prefix libomp)/lib/libomp.dylib"
 
     - name: Configure CMake (Windows)
       if: runner.os == 'Windows'
