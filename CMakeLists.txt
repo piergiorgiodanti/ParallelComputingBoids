@@ -6,7 +6,12 @@ set(CMAKE_C_STANDARD 11)
 # Percorsi librerie
 include_directories(include /usr/local/include)
 link_directories(/usr/local/lib)
-set(LIBS raylib dl rt X11 m pthread)
+
+if(UNIX)
+    set(LIBS raylib dl rt X11 m pthread)
+else()
+    set(LIBS raylib)
+endif()
 
 find_package(OpenMP REQUIRED)
 
@@ -29,27 +34,22 @@ target_compile_definitions(boids_seq_soa PRIVATE USE_SOA)
 target_link_libraries(boids_seq_soa PRIVATE ${LIBS})
 
 add_executable(boids_par_aos_histo ${COMMON_SOURCES})
-target_compile_options(boids_par_aos_histo PRIVATE -fopenmp)
 target_link_libraries(boids_par_aos_histo PRIVATE OpenMP::OpenMP_C ${LIBS})
 
 add_executable(boids_par_soa_histo ${COMMON_SOURCES})
 target_compile_definitions(boids_par_soa_histo PRIVATE USE_SOA)
-target_compile_options(boids_par_soa_histo PRIVATE -fopenmp)
 target_link_libraries(boids_par_soa_histo PRIVATE OpenMP::OpenMP_C ${LIBS})
 
 # Versione soa_histo non ottimizzata
 add_executable(boids_O0 ${COMMON_SOURCES})
 target_compile_definitions(boids_O0 PRIVATE USE_SOA)
-target_compile_options(boids_O0 PRIVATE -O0 -fopenmp) # Sovrascrive il flag globale -O3 per questo target
+target_compile_options(boids_O0 PRIVATE -O0)
 target_link_libraries(boids_O0 PRIVATE OpenMP::OpenMP_C ${LIBS})
 
 add_executable(boids_par_soa_atomic ${COMMON_SOURCES})
 target_compile_definitions(boids_par_soa_atomic PRIVATE USE_SOA USE_ATOMIC)
-target_compile_options(boids_par_soa_atomic PRIVATE -fopenmp)
 target_link_libraries(boids_par_soa_atomic PRIVATE OpenMP::OpenMP_C ${LIBS})
 
 add_executable(boids_par_aos_atomic ${COMMON_SOURCES})
 target_compile_definitions(boids_par_aos_atomic PRIVATE USE_ATOMIC)
-target_compile_options(boids_par_aos_atomic PRIVATE -fopenmp)
 target_link_libraries(boids_par_aos_atomic PRIVATE OpenMP::OpenMP_C ${LIBS})
-
