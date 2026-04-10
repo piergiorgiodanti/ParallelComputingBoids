@@ -21,7 +21,7 @@ Implementazione sequenziale e parallela dell'algoritmo Boids, sviluppato in C co
 Il progetto utilizza **uv** per gestire le dipendenze degli script di benchmark e plotting.
 * **macOS / Linux:**
   ```bash
-  curl -LsSf [https://astral.sh/uv/install.sh](https://astral.sh/uv/install.sh) | sh
+  curl -LsSf https://astral.sh/uv/install.sh | sh
   ```
 * **Windows:**
   ```powershell
