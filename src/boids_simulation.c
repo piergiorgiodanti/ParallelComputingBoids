@@ -6,19 +6,30 @@
 #include "boids_core.h"
 #include "boids_manager.h"
 #include "boids_simulation.h"
-#include <time.h>
+
 #ifdef _OPENMP
     #include <omp.h>
 #endif
 
+#ifdef _WIN32
+    #include <windows.h>
+#endif
+
 double get_wall_time() {
-    #ifdef _OPENMP
+#ifdef _OPENMP
     return omp_get_wtime();
-    #else
+#else
+#ifdef _WIN32
+    LARGE_INTEGER frequency, now;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&now);
+    return (double)now.QuadPart / frequency.QuadPart;
+#else
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return ts.tv_sec + ts.tv_nsec * 1e-9;
-    #endif
+#endif
+#endif
 }
 
 double get_cpu_time() {

@@ -2,7 +2,12 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <unistd.h>
+#ifdef _WIN32
+    #include <windows.h>
+    #include <process.h>
+#else
+    #include <unistd.h>
+#endif
 #include "boids_manager.h"
 #include "boids_types.h"
 
