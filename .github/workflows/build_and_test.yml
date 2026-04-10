@@ -63,4 +63,6 @@ jobs:
 
     # 7. Esecuzione Test / Validazione
     - name: Run Validation Scripts
-      run: uv run python scripts/run_validation_all.py
+      run: |
+      	cd src
+      	uv run python run_demo.py
