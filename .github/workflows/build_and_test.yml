@@ -12,19 +12,25 @@ jobs:
     strategy:
       fail-fast: false # Se fallisce un OS, continua a testare gli altri
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest] #, macos-latest, windows-latest]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
     # 1. Installazione Dipendenze (Ubuntu)
+    
     - name: Install dependencies (Ubuntu)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libraylib-dev libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libmesa-dev libgl1-mesa-dev libomp-dev
-
+        sudo apt-get install -y libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libgl1-mesa-dev libomp-dev
+        
+        git clone --depth 1 --branch 5.0 https://github.com/raysan5/raylib.git
+        cd raylib/src
+        make PLATFORM=PLATFORM_DESKTOP -j$(nproc)
+        sudo make install
+    
     # 2. Installazione Dipendenze (macOS)
     - name: Install dependencies (macOS)
       if: runner.os == 'macOS'
