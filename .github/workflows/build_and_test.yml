@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false # Se fallisce un OS, continua a testare gli altri
       matrix:
-        os: [macos-latest] #ubuntu-latest , windows-latest]
+        os: [windows-latest] #ubuntu-latest , windows-latest]
 
     steps:
     - name: Checkout code
