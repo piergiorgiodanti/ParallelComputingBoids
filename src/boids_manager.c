@@ -10,6 +10,50 @@
     #include <omp.h>
 #endif
 
+#include <stddef.h>
+
+#if defined(__APPLE__)
+    #include <sys/sysctl.h>
+#elif defined(_WIN32)
+    #include <windows.h>
+    #include <stdlib.h>
+#else
+    #include <unistd.h>
+#endif
+
+size_t get_cache_line_size() {
+#if defined(__APPLE__)
+    size_t line_size = 0;
+    size_t sizeof_line_size = sizeof(line_size);
+    if (sysctlbyname("hw.cachelinesize", &line_size, &sizeof_line_size, NULL, 0) == 0) {
+        return line_size;
+    }
+    return 64;
+
+#elif defined(_WIN32)
+    size_t line_size = 64;
+    DWORD buffer_size = 0;
+    GetLogicalProcessorInformation(0, &buffer_size);
+    SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buffer =
+        (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(buffer_size);
+
+    if (buffer != NULL && GetLogicalProcessorInformation(buffer, &buffer_size)) {
+        for (DWORD i = 0; i != buffer_size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+            if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
+                line_size = buffer[i].Cache.LineSize;
+                break;
+            }
+        }
+    }
+    free(buffer);
+    return line_size;
+
+#else
+    long size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+    return (size > 0) ? (size_t)size : 64; 
+#endif
+}
+
 void init_boids(const BoidSystem* boids, const int num_boids) {
 
     /* Si assegnano valori iniziali randomici ai boids.
@@ -35,7 +79,7 @@ void init_boids_system(BoidSystem *b, int num_boids) {
     b->count = num_boids;
 
     // Dimensione della linea di cache. Allineare la memoria per massimizzare l'efficienza
-    long alignment = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+    long alignment = sysconf(get_cache_line_size());
     if (alignment <= 0) {
         alignment = 64;
     }
@@ -134,7 +178,7 @@ void init_simulation_context(SimulationContext *ctx, int num_boids) {
     ctx->local_offsets = malloc(ctx->num_threads * sizeof(int *));
 
     // Rileviamo la cache line per evitare False Sharing
-    long cache_line = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+    long cache_line = sysconf(get_cache_line_size());
     if (cache_line <= 0) cache_line = 64;
 
     // Allineiamo la dimensione del buffer alla linea di cache
