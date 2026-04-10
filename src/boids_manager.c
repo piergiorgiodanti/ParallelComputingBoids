@@ -3,6 +3,8 @@
 #include <math.h>
 #include <string.h>
 #ifdef _WIN32
+    #define NOGDI
+    #define NOUSER
     #include <windows.h>
     #include <process.h>
 #else
