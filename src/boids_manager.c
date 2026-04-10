@@ -2,14 +2,27 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <stddef.h>
+
 #ifdef _WIN32
     #define NOGDI
     #define NOUSER
+    #define NOMB
     #include <windows.h>
     #include <process.h>
+    #include <malloc.h>
+
+    #define ALIGNED_ALLOC(alignment, size) _aligned_malloc((size), (alignment))
+    #define ALIGNED_FREE(ptr) _aligned_free(ptr)
+    #define RAND_R(seed) rand()
 #else
     #include <unistd.h>
+
+    #define ALIGNED_ALLOC(alignment, size) aligned_alloc((alignment), (size))
+    #define ALIGNED_FREE(ptr) free(ptr)
+    #define RAND_R(seed) rand_r(seed)
 #endif
+
 #include "boids_manager.h"
 #include "boids_types.h"
 
@@ -17,15 +30,8 @@
     #include <omp.h>
 #endif
 
-#include <stddef.h>
-
 #if defined(__APPLE__)
     #include <sys/sysctl.h>
-#elif defined(_WIN32)
-    #include <windows.h>
-    #include <stdlib.h>
-#else
-    #include <unistd.h>
 #endif
 
 size_t get_cache_line_size() {
@@ -62,17 +68,13 @@ size_t get_cache_line_size() {
 }
 
 void init_boids(const BoidSystem* boids, const int num_boids) {
-
-    /* Si assegnano valori iniziali randomici ai boids.
-       Questa parte poteva essere parallela, ma non rientrando nella parte
-       da misurare nelle prestazioni è rimasta sequenziale */
-
     unsigned int master_seed = 42;
     for (int i = 0; i < num_boids; i++) {
-        const float start_x = MARGIN_X + (rand_r(&master_seed) % (SCREEN_WIDTH - 2 * MARGIN_X));
-        const float start_y = MARGIN_Y + (rand_r(&master_seed) % (SCREEN_HEIGHT - 2 * MARGIN_Y));
-        const float angle = (float)(rand_r(&master_seed) % 360) * DEG2RAD;
-        const float speed = MIN_SPEED + ((float)rand_r(&master_seed) / (float)RAND_MAX) * (MAX_SPEED - MIN_SPEED);
+        // Usiamo la macro RAND_R che si adatta al sistema operativo
+        const float start_x = MARGIN_X + (RAND_R(&master_seed) % (SCREEN_WIDTH - 2 * MARGIN_X));
+        const float start_y = MARGIN_Y + (RAND_R(&master_seed) % (SCREEN_HEIGHT - 2 * MARGIN_Y));
+        const float angle = (float)(RAND_R(&master_seed) % 360) * DEG2RAD;
+        const float speed = MIN_SPEED + ((float)RAND_R(&master_seed) / (float)RAND_MAX) * (MAX_SPEED - MIN_SPEED);
         const float start_vx = cosf(angle) * speed;
         const float start_vy = sinf(angle) * speed;
         B_X(boids, i) = start_x;
@@ -85,8 +87,7 @@ void init_boids(const BoidSystem* boids, const int num_boids) {
 void init_boids_system(BoidSystem *b, int num_boids) {
     b->count = num_boids;
 
-    // Dimensione della linea di cache. Allineare la memoria per massimizzare l'efficienza
-    long alignment = sysconf(get_cache_line_size());
+    size_t alignment = get_cache_line_size();
     if (alignment <= 0) {
         alignment = 64;
     }
@@ -95,11 +96,10 @@ void init_boids_system(BoidSystem *b, int num_boids) {
     size_t size_bytes = sizeof(float) * num_boids;
     size_t aligned_size = ((size_bytes + alignment - 1) / alignment) * alignment;
 
-    // Allocazione SoA allineata
-    b->x  = (float *) aligned_alloc(alignment, aligned_size);
-    b->y  = (float *) aligned_alloc(alignment, aligned_size);
-    b->vx = (float *) aligned_alloc(alignment, aligned_size);
-    b->vy = (float *) aligned_alloc(alignment, aligned_size);
+    b->x  = (float *) ALIGNED_ALLOC(alignment, aligned_size);
+    b->y  = (float *) ALIGNED_ALLOC(alignment, aligned_size);
+    b->vx = (float *) ALIGNED_ALLOC(alignment, aligned_size);
+    b->vy = (float *) ALIGNED_ALLOC(alignment, aligned_size);
 
     if (!b->x || !b->y || !b->vx || !b->vy) {
         fprintf(stderr, "Errore di allocazione SoA\n");
@@ -109,8 +109,7 @@ void init_boids_system(BoidSystem *b, int num_boids) {
     size_t size_bytes = sizeof(Boid) * num_boids;
     size_t aligned_size = ((size_bytes + alignment - 1) / alignment) * alignment;
 
-    // Allocazione AoS allineata
-    b->data = (Boid *) aligned_alloc(alignment, aligned_size);
+    b->data = (Boid *) ALIGNED_ALLOC(alignment, aligned_size);
 
     if (!b->data) {
         fprintf(stderr, "Errore di allocazione AoS\n");
@@ -123,13 +122,13 @@ void free_boids_system(BoidSystem *b) {
     if (b == NULL) return;
 
     #ifdef USE_SOA
-    free(b->x);
-    free(b->y);
-    free(b->vx);
-    free(b->vy);
+    ALIGNED_FREE(b->x);
+    ALIGNED_FREE(b->y);
+    ALIGNED_FREE(b->vx);
+    ALIGNED_FREE(b->vy);
     b->x = b->y = b->vx = b->vy = NULL;
     #else
-    free(b->data);
+    ALIGNED_FREE(b->data);
     b->data = NULL;
     #endif
 }
@@ -145,8 +144,8 @@ void free_simulation_context(const SimulationContext *ctx) {
     #ifdef _OPENMP
     if (ctx->local_histograms) {
         for (int t = 0; t < ctx->num_threads; t++) {
-            free(ctx->local_histograms[t]);
-            free(ctx->local_offsets[t]);
+            ALIGNED_FREE(ctx->local_histograms[t]);
+            ALIGNED_FREE(ctx->local_offsets[t]);
         }
         free(ctx->local_histograms);
         free(ctx->local_offsets);
@@ -161,7 +160,6 @@ void init_simulation_context(SimulationContext *ctx, int num_boids) {
     ctx->num_threads = 1;
     #endif
 
-    // Assegna valori utili alla struttura ctx
     const float scale = sqrtf(1000.0f / (float)num_boids);
     const float v_range = 150.0f * scale;
     ctx->protected_range_sq = (40.0f * scale) * (40.0f * scale);
@@ -172,7 +170,6 @@ void init_simulation_context(SimulationContext *ctx, int num_boids) {
     ctx->grid_rows = (SCREEN_HEIGHT / (int)v_range) + 1;
     ctx->total_cells = ctx->grid_cols * ctx->grid_rows;
 
-    // Alloca le strutture per la gestione degli indici delle celle
     ctx->counting_cell = calloc(ctx->total_cells, sizeof(int));
     ctx->cell_offsets = malloc((ctx->total_cells + 1) * sizeof(int));
     ctx->sorted_ind = malloc(num_boids * sizeof(int));
@@ -180,23 +177,19 @@ void init_simulation_context(SimulationContext *ctx, int num_boids) {
     ctx->temp_offsets = malloc(ctx->total_cells * sizeof(int));
 
     #if defined(_OPENMP) && !defined(USE_ATOMIC)
-    // Se siamo nella versione con gli istogrammi si allocano
     ctx->local_histograms = malloc(ctx->num_threads * sizeof(int *));
     ctx->local_offsets = malloc(ctx->num_threads * sizeof(int *));
 
-    // Rileviamo la cache line per evitare False Sharing
-    long cache_line = sysconf(get_cache_line_size());
+    size_t cache_line = get_cache_line_size();
     if (cache_line <= 0) cache_line = 64;
 
-    // Allineiamo la dimensione del buffer alla linea di cache
     size_t size_bytes = ctx->total_cells * sizeof(int);
     size_t aligned_size = ((size_bytes + cache_line - 1) / cache_line) * cache_line;
 
     for (int t = 0; t < ctx->num_threads; t++) {
-        // aligned_alloc garantisce che l'indirizzo di inizio sia multiplo di cache_line
-        ctx->local_histograms[t] = aligned_alloc(cache_line, aligned_size);
+        ctx->local_histograms[t] = ALIGNED_ALLOC(cache_line, aligned_size);
         memset(ctx->local_histograms[t], 0, aligned_size);
-        ctx->local_offsets[t] = aligned_alloc(cache_line, aligned_size);
+        ctx->local_offsets[t] = ALIGNED_ALLOC(cache_line, aligned_size);
     }
 
     #else

@@ -14,6 +14,7 @@
 #ifdef _WIN32
     #define NOGDI
     #define NOUSER
+    #define NOMB
     #include <windows.h>
 #endif
 
