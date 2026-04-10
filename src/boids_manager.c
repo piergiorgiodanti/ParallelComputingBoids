@@ -50,7 +50,7 @@ size_t get_cache_line_size() {
 
 #else
     long size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-    return (size > 0) ? (size_t)size : 64; 
+    return (size > 0) ? (size_t)size : 64;
 #endif
 }
 
