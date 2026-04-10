@@ -113,7 +113,8 @@ SimulationResult boids_simulation(const int num_boids, const int frames, bool sh
         const int* restrict s_ind  = sim.sorted_ind;
 
         #pragma omp parallel for schedule(runtime)
-        for (int i = 0; i < num_boids; i++) {
+        int i;
+        for (i = 0; i < num_boids; i++) {
             // Applica le regole Separation, Alignment e Cohesion
             // ed i cambi di direzione quando è sul bordo, controlla i limiti di velocità e aggiorna la posizione
             update_and_move_boid(i, old_boids, new_boids, dt, &sim, p_sq, v_sq, g_rows, g_cols, c_cell, c_offs, s_ind);

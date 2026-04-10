@@ -121,15 +121,16 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
 
     #pragma omp parallel
     {
+        int c, i;
         // Reset
         #pragma omp for
-        for (int c = 0; c < total_cells; c++) {
+        for (c = 0; c < total_cells; c++) {
             ctx->counting_cell[c] = 0;
         }
 
         // Conteggio boids per ogni cella
         #pragma omp for
-        for (int i = 0; i < num_boids; i++) {
+        for (i = 0; i < num_boids; i++) {
             int cell = get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows);
             #pragma omp atomic
             ctx->counting_cell[cell]++;
@@ -149,7 +150,7 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
 
         // Ordinamento degli indici
         #pragma omp for
-        for (int i = 0; i < num_boids; i++) {
+        for (i = 0; i < num_boids; i++) {
             int cell = get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows);
             int pos;
 
@@ -165,6 +166,7 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
         const int tid = omp_get_thread_num();
         int* my_hist = ctx->local_histograms[tid];
         int* my_offs = ctx->local_offsets[tid];
+        int i, c;
 
         // Reset locale
         memset(my_hist, 0, total_cells * sizeof(int));
@@ -174,16 +176,16 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
            alla cella c. */
 
         #pragma omp for
-        for (int i = 0; i < num_boids; i++) {
+        for (i = 0; i < num_boids; i++) {
             my_hist[get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows)]++;
         }
 
-        /*  Riduzione: i thread si dividono il numero di celle, e per ogni cella contano
+        /* Riduzione: i thread si dividono il numero di celle, e per ogni cella contano
             quanti boids hanno contato gli altri threads per quella cella, e scrivono
             il totale in counting_cell */
 
         #pragma omp for
-        for (int c = 0; c < total_cells; c++) {
+        for (c = 0; c < total_cells; c++) {
             int sum = 0;
             for (int t = 0; t < ctx->num_threads; t++) sum += ctx->local_histograms[t][c];
             ctx->counting_cell[c] = sum;
@@ -197,7 +199,7 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
                 ctx->cell_offsets[i+1] = ctx->cell_offsets[i] + ctx->counting_cell[i];
         }
 
-        /*  Ogni thread calcola l'offset da cui iniziare a scrivere per ogni cella.
+        /* Ogni thread calcola l'offset da cui iniziare a scrivere per ogni cella.
             L'offset è dato da:
 
             cell_offsets[c] +
@@ -206,18 +208,18 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
             In questo modo ogni thread ottiene una porzione distinta dell'intervallo
             della cella dentro sorted_ind e può scrivere senza collisioni con gli altri. */
 
-        for (int c = 0; c < total_cells; c++) {
+        for (c = 0; c < total_cells; c++) {
             int thread_offset = 0;
             for (int t = 0; t < tid; t++) thread_offset += ctx->local_histograms[t][c];
             my_offs[c] = ctx->cell_offsets[c] + thread_offset;
         }
 
-        /*  Orindamento indici dei boids. Ogni thread utilizza la propria copia privata
+        /* Orindamento indici dei boids. Ogni thread utilizza la propria copia privata
             di offset, per non dover modificare una risorsa condivisa.
             Ogni thread lavora sul proprio offset */
 
         #pragma omp for
-        for (int i = 0; i < num_boids; i++) {
+        for (i = 0; i < num_boids; i++) {
             const int cell = get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows);
             ctx->sorted_ind[my_offs[cell]++] = i;
         }
@@ -243,8 +245,9 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
 }
 
 void sort_boids_by_cell(const BoidSystem* boids, const int num_boids, int *sorted_ind, const BoidSystem* sorted_boids) {
+    int i;
     #pragma omp parallel for
-    for (int i = 0; i < num_boids; i++) {
+    for (i = 0; i < num_boids; i++) {
         // Legge l'indice vecchio dalla mappa
         const int idx = sorted_ind[i];
 
