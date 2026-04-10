@@ -4,11 +4,13 @@ project(boids C)
 set(CMAKE_C_STANDARD 11)
 
 # Percorsi librerie
-include_directories(include /usr/local/include)
-link_directories(/usr/local/lib)
+include_directories(include /usr/local/include /opt/homebrew/include)
+link_directories(/usr/local/lib /opt/homebrew/lib)
 
-if(UNIX)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(LIBS raylib dl rt X11 m pthread)
+elseif(APPLE)
+    set(LIBS raylib)
 else()
     set(LIBS raylib)
 endif()
