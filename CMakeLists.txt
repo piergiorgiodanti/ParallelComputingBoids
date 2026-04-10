@@ -20,9 +20,8 @@ find_package(OpenMP REQUIRED)
 
 # Flag ottimizzazioni
 if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /O2 /fp:fast /W3 /GL")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /O2 /fp:fast /W3 /GL -openmp:llvm")
 else()
-    # Flag per GCC / Clang (Linux e macOS)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -march=native -ffast-math -flto -Wall")
 endif()
 
