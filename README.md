@@ -7,7 +7,9 @@ Implementazione sequenziale e parallela dell'algoritmo Boids, sviluppato in C co
 ### Librerie C
 * **Linux:**
   ```bash
-  sudo apt update && sudo apt install libraylib-dev libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libmesa-dev libgl1-mesa-dev
+  sudo apt update && sudo apt install -y libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev libgl1-mesa-dev libomp-dev
+  git clone --depth 1 --branch 5.0 https://github.com/raysan5/raylib.git
+  cd raylib/src && make PLATFORM=PLATFORM_DESKTOP -j$(nproc) && sudo make install
   ```
 * **macOS:**
   ```bash
@@ -25,18 +27,24 @@ Il progetto utilizza **uv** per gestire le dipendenze degli script di benchmark 
   ```
 * **Windows:**
   ```powershell
-  powershell -c "irm [https://astral.sh/uv/install.ps1](https://astral.sh/uv/install.ps1) | iex"
+  powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
   ```
 
 ---
 
 ## Compilazione
-
+### Configurazione
+* **macOS / Linux:**
+  ```bash
+  cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release
+  ```
+* **Windows:**
+  ```powershell
+  cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+  ```
+### Build
 ```bash
-mkdir cmake-build-release
-cd cmake-build-release
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc)
+cmake --build cmake-build-release --config Release --parallel 4
 ```
 
 ### Target principali:
