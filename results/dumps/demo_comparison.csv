@@ -1,0 +1,3 @@
+Layout,Sync,Schedule,Boids,Threads,WallTime_Avg,WallTime_StdDev,CPUTime_Avg,Efficiency,StepsPerSec
+SoA,Seq,dynamic-64,10000,1,7.312203,0.000000,7.310928,99.98,68.38
+SoA,Histo,dynamic-64,10000,8,1.366269,0.000000,10.856971,99.33,365.96

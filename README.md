@@ -91,7 +91,7 @@ Gli script per raccogliere i dati per le analisi si trovano nella cartella `scri
     ```
 * **Esecuzione Demo:** Avvio test della grafica.
     ```bash
-    uv run python run_demo.py
+    uv run python run_gui.py
     ```
 
 ### Grafici
