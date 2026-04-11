@@ -3,15 +3,20 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+import platform
 
 BUILD_DIR = "../cmake-build-release"
 OUT_DIR = "../results/validation_dumps"
 
-TARGETS = [
+BASE_TARGETS = [
     "boids_seq_aos", "boids_seq_soa",
     "boids_par_aos_histo", "boids_par_soa_histo",
     "boids_par_aos_atomic", "boids_par_soa_atomic"
 ]
+
+# Aggiugne .exe se siamo su Windows
+ext = ".exe" if platform.system() == "Windows" else ""
+TARGETS = [f"{t}{ext}" for t in BASE_TARGETS]
 
 BOIDS = 1000
 STEPS = 10

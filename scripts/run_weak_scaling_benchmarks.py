@@ -1,13 +1,18 @@
 import subprocess
 import os
+import platform
 import sys
 
 BUILD_DIR = "../cmake-build-release"
 OUT_CSV = "../results/dumps/weak_scaling_benchmarks.csv"
 
-TARGETS = [
+BASE_TARGETS = [
     "boids_par_soa_histo",
 ]
+
+# Aggiugne .exe se siamo su Windows
+ext = ".exe" if platform.system() == "Windows" else ""
+TARGETS = [f"{t}{ext}" for t in BASE_TARGETS]
 
 WEAK_SCALING_CONFIGS = [
     (1250, 1),

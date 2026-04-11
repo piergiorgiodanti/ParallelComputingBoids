@@ -1,9 +1,15 @@
 import subprocess
 import os
 import sys
+import platform
 
 BUILD_DIR = "../cmake-build-release"
-TARGET_NAME = "boids_par_soa_histo"
+
+BASE_TARGET_NAME = "boids_par_soa_histo"
+
+# Aggiunge .exe se siamo su Windows
+ext = ".exe" if platform.system() == "Windows" else ""
+TARGET_NAME = f"{BASE_TARGET_NAME}{ext}"
 
 BOIDS = 20000
 THREADS = 8

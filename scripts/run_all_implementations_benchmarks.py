@@ -1,15 +1,20 @@
 import subprocess
 import os
+import platform
 import sys
 
 BUILD_DIR = "../cmake-build-release"
 OUT_CSV = "../results/dumps/all_implementations_benchmarks.csv"
 
-TARGETS = [
+BASE_TARGETS = [
     "boids_seq_aos", "boids_seq_soa", 
     "boids_par_aos_histo", "boids_par_soa_histo", 
     "boids_par_aos_atomic", "boids_par_soa_atomic"
 ]
+
+# Aggiugne .exe se siamo su Windows
+ext = ".exe" if platform.system() == "Windows" else ""
+TARGETS = [f"{t}{ext}" for t in BASE_TARGETS]
 
 BOIDS_LIST = [1000, 5000, 10000, 20000]
 THREADS_LIST = [1, 2, 4, 8, 16]

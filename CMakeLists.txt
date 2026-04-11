@@ -3,6 +3,9 @@ project(boids C)
 
 set(CMAKE_C_STANDARD 11)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR})
+
 include_directories(include /usr/local/include /opt/homebrew/include)
 link_directories(/usr/local/lib /opt/homebrew/lib)
 
