@@ -73,7 +73,7 @@ Ogni eseguibile accetta i seguenti parametri:
 
 ## Scripts per analisi
 
-Gli script per raccogliere i dati per le analisi si trovano nella cartella `scripts/`.
+Gli script per raccogliere i dati per le analisi e per le demo si trovano nella cartella `scripts/`.
 
 ### Benchmark
 * **Benchmark Completo:** Esegue tutti i target per diversi numeri di boids e thread.
@@ -85,19 +85,26 @@ Gli script per raccogliere i dati per le analisi si trovano nella cartella `scri
     ```bash
     uv run python run_schedule_benchmarks.py
     ```
-* **Validazione Fisica:** Verifica che le versioni parallele producano risultati identici alla sequenziale.
+
+### Grafici
+* Dopo aver raccolto i dati (che verranno salvati in `results/dumps/`), generare i plot con:
+  ```bash
+  uv run python analisi_dati.py
+  ```
+### Validazione Fisica
+* Verifica che le versioni parallele producano risultati identici alla sequenziale.
     ```bash
     uv run python run_validation_all.py
     ```
-* **Esecuzione Demo:** Avvio test della grafica.
+### Demo
+* **Esecuzione Grafica:** Avvio test della grafica.
     ```bash
     uv run python run_gui.py
     ```
+* **Demo Confronto:** Confronto tra una versione squenziale e una parallela.
+    ```bash
+    uv run python run_demo.py
+    ```
 
-### Grafici
-Dopo aver raccolto i dati (che verranno salvati in `results/dumps/`), generare i plot con:
-```bash
-uv run python analisi_dati.py
-```
 
 ---

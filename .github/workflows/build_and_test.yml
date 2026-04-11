@@ -69,6 +69,6 @@ jobs:
     - name: Build
       run: cmake --build cmake-build-release --config Release --parallel 4
 
-    # 7. Esecuzione Test / Validazione
-    - name: Run Validation Scripts
+    # 7. Esecuzione Test
+    - name: Run Demo Scripts
       run: cd scripts && uv run python run_demo.py
