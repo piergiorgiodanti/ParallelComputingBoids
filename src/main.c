@@ -7,15 +7,15 @@
 #include "boids_simulation.h"
 
 #ifdef _WIN32
-    #define STRCPY_SAFE(dest, dest_size, src) strcpy_s((dest), (dest_size), (src))
+    #define STRCPY(dest, dest_size, src) strcpy_s((dest), (dest_size), (src))
 #else
-    #define STRCPY_SAFE(dest, dest_size, src) strcpy((dest), (src))
+    #define STRCPY(dest, dest_size, src) strcpy((dest), (src))
 #endif
 
 #ifdef _WIN32
-    #define STRNCPY_SAFE(dest, dest_size, src, count) strncpy_s((dest), (dest_size), (src), (count))
+    #define STRNCPY(dest, dest_size, src, count) strncpy_s((dest), (dest_size), (src), (count))
 #else
-    #define STRNCPY_SAFE(dest, dest_size, src, count) do { \
+    #define STRNCPY(dest, dest_size, src, count) do { \
     strncpy((dest), (src), (count)); \
     (dest)[(count)] = '\0'; \
     } while(0)
@@ -48,20 +48,20 @@ Stats compute_stats(double* times, int n) {
 }
 
 void parse_args(int argc, char* argv[], Config* cfg) {
-    STRCPY_SAFE(cfg->mode, sizeof(cfg->mode), "");
+    STRCPY(cfg->mode, sizeof(cfg->mode), "");
     cfg->boids = -1;
     cfg->threads = -1;
     cfg->steps = 1000;
     cfg->num_runs = 5;
-    STRCPY_SAFE(cfg->output_file, sizeof(cfg->output_file), "results.csv");
+    STRCPY(cfg->output_file, sizeof(cfg->output_file), "results.csv");
 
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--mode") == 0 && i + 1 < argc) STRCPY_SAFE(cfg->mode, sizeof(cfg->mode), argv[++i]);
+        if (strcmp(argv[i], "--mode") == 0 && i + 1 < argc) STRCPY(cfg->mode, sizeof(cfg->mode), argv[++i]);
         else if (strcmp(argv[i], "--boids") == 0 && i + 1 < argc) cfg->boids = atoi(argv[++i]);
         else if (strcmp(argv[i], "--threads") == 0 && i + 1 < argc) cfg->threads = atoi(argv[++i]);
         else if (strcmp(argv[i], "--steps") == 0 && i + 1 < argc) cfg->steps = atoi(argv[++i]);
         else if (strcmp(argv[i], "--runs") == 0 && i + 1 < argc) cfg->num_runs = atoi(argv[++i]);
-        else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) STRCPY_SAFE(cfg->output_file, sizeof(cfg->output_file), argv[++i]);
+        else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) STRCPY(cfg->output_file, sizeof(cfg->output_file), argv[++i]);
     }
 
     if (strlen(cfg->mode) == 0 || cfg->boids <= 0 || cfg->threads <= 0) {
@@ -74,26 +74,26 @@ void run_benchmark(Config* cfg) {
 
     char layout[8], sync[16];
     #ifdef USE_SOA
-        STRCPY_SAFE(layout, sizeof(layout), "SoA");
+        STRCPY(layout, sizeof(layout), "SoA");
     #else
-        STRCPY_SAFE(layout, sizeof(layout), "AoS");
+        STRCPY(layout, sizeof(layout), "AoS");
     #endif
 
     #ifdef USE_ATOMIC
-        STRCPY_SAFE(sync, sizeof(sync), "Atomic");
+        STRCPY(sync, sizeof(sync), "Atomic");
     #elif defined(_OPENMP)
-        STRCPY_SAFE(sync, sizeof(sync), "Histo");
+        STRCPY(sync, sizeof(sync), "Histo");
     #else
-        STRCPY_SAFE(sync, sizeof(sync), "Seq");
+        STRCPY(sync, sizeof(sync), "Seq");
     #endif
 
     char* env_sched = getenv("OMP_SCHEDULE");
     char schedule_name[32];
     if (env_sched) {
-        STRNCPY_SAFE(schedule_name, sizeof(schedule_name), env_sched, 31);
+        STRNCPY(schedule_name, sizeof(schedule_name), env_sched, 31);
         for(int i=0; schedule_name[i]; i++) if(schedule_name[i]==',') schedule_name[i]='-';
     } else {
-        STRCPY_SAFE(schedule_name, sizeof(schedule_name), "default");
+        STRCPY(schedule_name, sizeof(schedule_name), "default");
     }
 
     // Warm-up
