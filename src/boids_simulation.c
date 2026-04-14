@@ -103,7 +103,6 @@ SimulationResult boids_simulation(const int num_boids, const int frames, bool sh
             new_boids = temp;
         }
 
-        // Estrazione parametri per il loop parallelo (evita overhead di dereferenziazione struct)
         const float p_sq = sim.protected_range_sq;
         const float v_sq = sim.visual_range_sq;
         const int g_rows = sim.grid_rows;
