@@ -27,6 +27,7 @@ COLORS = {'AoS Atomic': '#e74c3c', 'AoS Histo': '#c0392b', 'SoA Atomic': '#3498d
 BOIDS_TARGET = 20000
 df_base = df[df['Schedule'] == 'dynamic-64']
 
+# 1. Grafico confronto architetture
 plt.figure(figsize=(10, 6))
 df_comp = df_base[(df_base['Boids'] == BOIDS_TARGET) & (df_base['Threads'] == 8)].copy()
 df_comp = df_comp[df_comp['Impl'].isin(PARALLEL_IMPLS)]
@@ -40,6 +41,7 @@ plt.tight_layout()
 plt.savefig('../results/plots/1_arch_comparison.png')
 plt.close()
 
+# 2. Grafico strong scaling
 plt.figure(figsize=(10, 6))
 df_20k = df_base[df_base['Boids'] == BOIDS_TARGET]
 threads_list = [1, 2, 4, 8, 16]
@@ -62,6 +64,7 @@ plt.tight_layout()
 plt.savefig('../results/plots/2_strong_scaling.png')
 plt.close()
 
+# 3. Grafico speedup ed efficienza
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
 
 for impl in PARALLEL_IMPLS:
@@ -90,15 +93,20 @@ plt.tight_layout()
 plt.savefig('../results/plots/3_speedup_efficiency.png')
 plt.close()
 
+# 4. Grafico cpu e wall time
 plt.figure(figsize=(10, 6))
 soa_h_data = df_20k[df_20k['Impl'] == 'SoA Histo'].sort_values('Threads')
 
 width = 0.35
 x = np.arange(len(threads_list))
-ideal_cpu = soa_h_data['WallTime_Avg'].values * soa_h_data['Threads'].values
 
-plt.bar(x - width/2, ideal_cpu, width, label='CPU Time Ideale (WallTime * Thread)', color='#95a5a6')
-plt.bar(x + width/2, soa_h_data['CPUTime_Avg'], width, label='CPU Time Reale (Dai dati osservati)', color='#e67e22')
+cpu_sequenziale = soa_h_data[soa_h_data['Threads'] == 1]['CPUTime_Avg'].values[0]
+ideal_cpu = np.full(len(threads_list), cpu_sequenziale)
+
+real_cpu = soa_h_data['CPUTime_Avg'].values
+
+plt.bar(x - width/2, ideal_cpu, width, label='CPU Time Ideale (Tempo Sequenziale)', color='#95a5a6')
+plt.bar(x + width/2, real_cpu, width, label='CPU Time Reale (Misurato)', color='#e67e22')
 
 plt.ylabel('Tempo Cumulativo (s)')
 plt.xlabel('Thread')
@@ -110,6 +118,7 @@ plt.tight_layout()
 plt.savefig('../results/plots/4_cpu_vs_wall_time.png')
 plt.close()
 
+# 5. Grafico time vs boids
 plt.figure(figsize=(10, 6))
 df_8t = df_base[df_base['Threads'] == 8]
 boids_list = [1000, 5000, 10000, 20000]
@@ -128,6 +137,7 @@ plt.tight_layout()
 plt.savefig('../results/plots/5_time_vs_boids.png')
 plt.close()
 
+# 6. Grafico scheduling
 schedules = ['static', 'dynamic-16', 'dynamic-32', 'dynamic-64', 'dynamic-128', 'guided']
 df_sched = df_sched_raw[(df_sched_raw['Boids'] == BOIDS_TARGET) & (df_sched_raw['Threads'] == 8) & (df_sched_raw['Impl'] == 'SoA Histo')].copy()
 df_sched = df_sched[df_sched['Schedule'].isin(schedules)]
@@ -153,6 +163,7 @@ plt.tight_layout()
 plt.savefig('../results/plots/6_scheduling_impact.png')
 plt.close()
 
+# 7. Grafico ottimizzazioni
 t_o3_row = df_20k[(df_20k['Impl'] == 'SoA Histo') & (df_20k['Threads'] == 8)].iloc[0]
 t_o3 = t_o3_row['WallTime_Avg']
 t_o3_std = t_o3_row['WallTime_StdDev']
@@ -170,6 +181,7 @@ plt.tight_layout()
 plt.savefig('../results/plots/7_compiler_impact.png')
 plt.close()
 
+# 8. Grafico weak scaling
 plt.figure(figsize=(10, 6))
 
 threads = df_weak['Threads']

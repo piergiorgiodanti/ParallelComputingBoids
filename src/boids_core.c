@@ -121,6 +121,8 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
 
     #pragma omp parallel
     {
+        // Parallela con atomic
+
         int c, i;
         // Reset
         #pragma omp for
@@ -163,6 +165,8 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
         #else
     #pragma omp parallel
     {
+        // Parallela con istrogrammi
+
         const int tid = omp_get_thread_num();
         int* my_hist = ctx->local_histograms[tid];
         int* my_offs = ctx->local_offsets[tid];
@@ -226,7 +230,8 @@ void update_indices(const BoidSystem* boids, int num_boids, SimulationContext* c
     }
         #endif
     #else
-        // SEQUENZIALE
+        // Sequenziale
+
         memset(ctx->counting_cell, 0, total_cells * sizeof(int));
         // Conteggio boids per ogni cella
         for (int i = 0; i < num_boids; i++) ctx->counting_cell[get_cell_index(B_X(boids, i), B_Y(boids, i), cols, rows)]++;

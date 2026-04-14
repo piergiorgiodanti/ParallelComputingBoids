@@ -7,7 +7,6 @@ BUILD_DIR = "../cmake-build-release"
 
 BASE_TARGET_NAME = "boids_par_soa_histo"
 
-# Aggiunge .exe se siamo su Windows
 ext = ".exe" if platform.system() == "Windows" else ""
 TARGET_NAME = f"{BASE_TARGET_NAME}{ext}"
 

@@ -117,8 +117,7 @@ void run_benchmark(Config* cfg) {
     Stats c_s = compute_stats(cpu_results, cfg->num_runs);
     double efficiency = (c_s.mean / (w_s.mean * cfg->threads)) * 100.0;
     double steps_per_sec = cfg->steps / w_s.mean;
-
-    // Apertura file in APPEND
+    
     FILE *check = fopen(cfg->output_file, "r");
     bool write_header = (check == NULL);
     if (check) fclose(check);

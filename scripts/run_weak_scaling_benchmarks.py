@@ -10,7 +10,6 @@ BASE_TARGETS = [
     "boids_par_soa_histo",
 ]
 
-# Aggiugne .exe se siamo su Windows
 ext = ".exe" if platform.system() == "Windows" else ""
 TARGETS = [f"{t}{ext}" for t in BASE_TARGETS]
 
