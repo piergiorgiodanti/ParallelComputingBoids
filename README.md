@@ -1,110 +1,143 @@
-# Parallel Computing: Boids Simulation OpenMP
+# Parallel Computing: Boids Simulation with OpenMP
 
-Implementazione sequenziale e parallela dell'algoritmo Boids, sviluppato in C con **OpenMP**.
+Sequential and parallel implementations of the **Boids algorithm**, developed in C using **OpenMP**.
 
-## Prerequisiti
+## Prerequisites
 
-### Librerie C
+### C Libraries
+
 * **Linux:**
+
   ```bash
   sudo apt update && sudo apt install -y libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev libgl1-mesa-dev libomp-dev
   git clone --depth 1 --branch 5.0 https://github.com/raysan5/raylib.git
   cd raylib/src && make PLATFORM=PLATFORM_DESKTOP -j$(nproc) && sudo make install
   ```
+
 * **macOS:**
+
   ```bash
   brew install cmake raylib libomp
   ```
+
 * **Windows:**
+
   ```bash
   vcpkg install raylib:x64-windows
   ```
-  
-Il progetto utilizza **uv** per gestire le dipendenze degli script di benchmark e plotting.
+
+The project uses **uv** to manage the dependencies required by the benchmarking and plotting scripts.
+
 * **macOS / Linux:**
+
   ```bash
   curl -LsSf https://astral.sh/uv/install.sh | sh
   ```
+
 * **Windows:**
+
   ```powershell
   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
   ```
 
 ---
 
-## Compilazione
-### Configurazione
+## Compilation
+
+### Configuration
+
 * **macOS / Linux:**
+
   ```bash
   cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release
   ```
+
 * **Windows:**
+
   ```powershell
   cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
   ```
+
 ### Build
+
 ```bash
 cmake --build cmake-build-release --config Release --parallel 4
 ```
 
-### Target principali:
-* `boids_seq_aos` / `boids_seq_soa`: Versioni sequenziali.
-* `boids_par_aos_histo` / `boids_par_soa_histo`: Parallelismo con riduzione tramite istogrammi locali.
-* `boids_par_aos_atomic` / `boids_par_soa_atomic`: Parallelismo tramite istruzioni atomiche.
-* `boids_O0`: Versione SoA Histo senza ottimizzazioni del compilatore.
+### Main Targets
+
+* `boids_seq_aos` / `boids_seq_soa`: Sequential implementations.
+* `boids_par_aos_histo` / `boids_par_soa_histo`: Parallel implementations using reduction through local histograms.
+* `boids_par_aos_atomic` / `boids_par_soa_atomic`: Parallel implementations using atomic operations.
+* `boids_O0`: SoA Histo implementation compiled without compiler optimizations.
 
 ---
 
-## Utilizzo riga di comando
+## Command-Line Usage
 
-Ogni eseguibile accetta i seguenti parametri:
-- `--mode [gui|benchmark|validate]`
-- `--boids N`
-- `--threads N`
-- `--steps N`
-- `--runs N`
+Each executable accepts the following parameters:
 
-### Esempio
+* `--mode [gui|benchmark|validate]`
+* `--boids N`
+* `--threads N`
+* `--steps N`
+* `--runs N`
+
+### Example
+
 ```bash
 ./boids_par_soa_histo --mode gui --boids 10000 --threads 8
 ```
 
 ---
 
-## Scripts per analisi
+## Analysis Scripts
 
-Gli script per raccogliere i dati per le analisi e per le demo si trovano nella cartella `scripts/`.
+The scripts used to collect data for performance analysis and demos are located in the `scripts/` directory.
 
-### Benchmark
-* **Benchmark Completo:** Esegue tutti i target per diversi numeri di boids e thread.
-    ```bash
-    uv run python run_all_implementations_benchmarks.py
-    uv run python weak_scaling_benchmarks.py
-    ```
-* **Analisi Scheduling:** Valuta lo scheduling con `static`, `dynamic` e `guided`.
-    ```bash
-    uv run python run_schedule_benchmarks.py
-    ```
+### Benchmarks
 
-### Grafici
-* Dopo aver raccolto i dati (che verranno salvati in `results/dumps/`), generare i plot con:
+* **Full Benchmark:** Runs all implementations for different numbers of boids and threads.
+
   ```bash
-  uv run python analisi_dati.py
+  uv run python run_all_implementations_benchmarks.py
+  uv run python weak_scaling_benchmarks.py
   ```
-### Validazione Fisica
-* Verifica che le versioni parallele producano risultati identici alla sequenziale.
-    ```bash
-    uv run python run_validation_all.py
-    ```
-### Demo
-* **Esecuzione Grafica:** Avvio test della grafica.
-    ```bash
-    uv run python run_gui.py
-    ```
-* **Demo Confronto:** Confronto tra una versione squenziale e una parallela.
-    ```bash
-    uv run python run_demo.py
-    ```
 
+* **Scheduling Analysis:** Evaluates the performance of `static`, `dynamic`, and `guided` scheduling.
+
+  ```bash
+  uv run python run_schedule_benchmarks.py
+  ```
+
+### Plots
+
+After collecting the benchmark data, which is saved in `results/dumps/`, generate the plots with:
+
+```bash
+uv run python analisi_dati.py
+```
+
+### Physical Validation
+
+Verifies that the parallel implementations produce results identical to the sequential implementation.
+
+```bash
+uv run python run_validation_all.py
+```
+
+### Demos
+
+* **Graphical Execution:** Runs a graphical test of the simulation.
+
+  ```bash
+  uv run python run_gui.py
+  ```
+
+* **Comparison Demo:** Compares a sequential implementation with a parallel implementation.
+
+  ```bash
+  uv run python run_demo.py
+  ```
 
 ---
