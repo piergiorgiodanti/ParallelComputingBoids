@@ -65,30 +65,27 @@ plt.savefig('../results/plots/2_strong_scaling.png')
 plt.close()
 
 # 3. Grafico speedup ed efficienza
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+plt.figure(figsize=(10, 6))
 
 for impl in PARALLEL_IMPLS:
     data = df_20k[df_20k['Impl'] == impl].sort_values('Threads')
     speedup = seq_time / data['WallTime_Avg'].values
-    efficiency = speedup / data['Threads'].values * 100
 
-    ax1.plot(data['Threads'], speedup, marker='o', color=COLORS[impl], linewidth=2, label=impl)
-    ax2.plot(data['Threads'], efficiency, marker='s', color=COLORS[impl], linewidth=2, label=impl)
+    plt.plot(data['Threads'], speedup,
+             marker='o',
+             color=COLORS[impl],
+             linewidth=2,
+             label=impl)
 
-ax1.plot(threads_list, threads_list, 'k--', alpha=0.6, label='Ideale')
-ax1.set_xlabel('Thread')
-ax1.set_ylabel('Speedup')
-ax1.set_title('Speedup Parallelo')
-ax1.set_xticks(threads_list)
-ax1.grid(True, alpha=0.4)
+plt.plot(threads_list, threads_list, 'k--', alpha=0.6, label='Ideale')
 
-ax2.axhline(y=100, color='k', linestyle='--', alpha=0.6)
-ax2.set_xlabel('Thread')
-ax2.set_ylabel('Efficienza (%)')
-ax2.set_title('Efficienza di Parallelizzazione')
-ax2.set_xticks(threads_list)
-ax2.grid(True, alpha=0.4)
-ax2.legend()
+plt.xlabel('Numero di Thread')
+plt.ylabel('Speedup')
+plt.title('Speedup Parallelo')
+plt.xticks(threads_list)
+plt.legend()
+plt.grid(True, alpha=0.4)
+
 plt.tight_layout()
 plt.savefig('../results/plots/3_speedup_efficiency.png')
 plt.close()
